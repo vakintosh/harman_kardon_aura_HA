@@ -32,7 +32,7 @@ Add the following to your `configuration.yaml`:
 
 ```yaml
 hkaura_plus:
-  ip_address: 172.16.1.102
+  ip_address: 192.168.1.100  # Replace with your speaker's IP
   port: 10025
   name: Living Room Speaker
 ```
