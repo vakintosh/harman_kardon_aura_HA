@@ -32,7 +32,7 @@ Add the following to your `configuration.yaml`:
 
 ```yaml
 hkaura_plus:
-  ip_address: 172.16.1.102
+  ip_address: 192.168.1.100  # Replace with your speaker's IP
   port: 10025
   name: Living Room Speaker
 ```
@@ -49,6 +49,8 @@ hkaura_plus:
 After configuration and restart, you will see new entities in Home Assistant for your HK Aura Plus speaker. You can control volume, bass, EQ, and mute from the UI or use them in automations.
 
 ## Dashboard 
+
+![HK Aura Plus Speaker](img/HA_HK_Aura_App.png)
 
 ```yaml
 type: grid
@@ -69,10 +71,6 @@ cards:
 - Ensure your speaker is on the same network as Home Assistant.
 - Check the IP address in your configuration.
 - Review Home Assistant logs for integration errors.
-
-## License
-
-This project is licensed under the MIT License.
 
 ## Disclaimer
 
