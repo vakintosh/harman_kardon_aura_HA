@@ -1,5 +1,7 @@
 # switch.py
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.helpers.restore_state import RestoreEntity
+
 from . import DOMAIN
 import logging
 
@@ -13,7 +15,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     ], True)
 
 
-class HKAuraEQSwitch(SwitchEntity):
+class HKAuraEQSwitch(SwitchEntity, RestoreEntity):
     def __init__(self, device):
         self._device = device
         self._is_on = False
@@ -36,11 +38,16 @@ class HKAuraEQSwitch(SwitchEntity):
         self._is_on = False
         self.schedule_update_ha_state()
 
+    async def async_added_to_hass(self):
+        last_state = await self.async_get_last_state()
+        if last_state and last_state.state == "on":
+            self._is_on = True
+
     async def async_update(self):
         pass
 
 
-class HKAuraMuteSwitch(SwitchEntity):
+class HKAuraMuteSwitch(SwitchEntity, RestoreEntity):
     def __init__(self, device):
         self._device = device
         self._is_on = False
@@ -62,6 +69,11 @@ class HKAuraMuteSwitch(SwitchEntity):
         self._device.send_command("mute-off")
         self._is_on = False
         self.schedule_update_ha_state()
+
+    async def async_added_to_hass(self):
+        last_state = await self.async_get_last_state()
+        if last_state and last_state.state == "on":
+            self._is_on = True
 
     async def async_update(self):
         pass
