@@ -50,6 +50,8 @@ After configuration and restart, you will see new entities in Home Assistant for
 
 ## Dashboard 
 
+![HK Aura Plus Speaker](img/HA_HK_Aura_App.png)
+
 ```yaml
 type: grid
 cards:
@@ -69,10 +71,6 @@ cards:
 - Ensure your speaker is on the same network as Home Assistant.
 - Check the IP address in your configuration.
 - Review Home Assistant logs for integration errors.
-
-## License
-
-This project is licensed under the MIT License.
 
 ## Disclaimer
 

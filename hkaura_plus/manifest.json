@@ -1,0 +1,10 @@
+{
+  "domain": "hkaura_plus",
+  "name": "HK Aura Plus Speaker",
+  "version": "1.0.0",
+  "dependencies": [],
+  "codeowners": ["@vakintosh"],
+  "requirements": ["aiohttp"],
+  "iot_class": "local_polling",
+  "supported_platforms": ["volume", "switch", "bass"]
+}

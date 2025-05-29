@@ -1,0 +1,14 @@
+<!-- hk_request_template -->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<harman>
+  <mm>
+    <common>
+      <control>
+        <name>${action}</name>
+        <zone>${zone}</zone>
+        <para>${para}</para>
+      </control>
+    </common>
+  </mm>
+</harman>
