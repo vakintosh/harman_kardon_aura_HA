@@ -13,12 +13,30 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         HKAuraVolumeControl(device)
     ], True)
 
-class HKAuraBassControl(NumberEntity, RestoreEntity):
+class DebounceMixin:
+    def __init__(self):
+        self._debounce_task = None
+        self._pending_value = None
+
+    async def debounce_send(self, delay_seconds, send_func):
+        """Debounce sending commands, cancelling previous tasks if still pending."""
+        if self._debounce_task and not self._debounce_task.done():
+            self._debounce_task.cancel()
+
+        self._debounce_task = asyncio.create_task(self._debounce_worker(delay_seconds, send_func))
+
+    async def _debounce_worker(self, delay_seconds, send_func):
+        try:
+            await asyncio.sleep(delay_seconds)
+            await send_func(self._pending_value)
+        except asyncio.CancelledError:
+            pass
+
+class HKAuraBassControl(DebounceMixin, NumberEntity, RestoreEntity):
     def __init__(self, device):
+        super().__init__()
         self._device = device
         self._bass = 20
-        self._debounce_task = None
-        self._pending_bass = None
 
     @property
     def name(self):
@@ -50,28 +68,21 @@ class HKAuraBassControl(NumberEntity, RestoreEntity):
             self._bass = int(last_state.state)
 
     async def async_set_native_value(self, value: float) -> None:
-        self._pending_bass = int(value)
-        if self._debounce_task and not self._debounce_task.done():
-            self._debounce_task.cancel()
-        self._debounce_task = asyncio.create_task(self._debounce_send())
+        self._pending_value = int(value)
 
-    async def _debounce_send(self):
-        try:
-            await asyncio.sleep(0.5)
-            bass = self._pending_bass
-            _LOGGER.debug(f"Setting bass to: {bass}")
-            await self._device.send_request("set_bass_level", para=bass)
-            self._bass = bass
+        async def send_bass(value):
+            _LOGGER.debug(f"Setting bass to: {value}")
+            await self._device.send_request("set_bass_level", para=value)
+            self._bass = value
             self.async_write_ha_state()
-        except asyncio.CancelledError:
-            pass
 
-class HKAuraVolumeControl(NumberEntity, RestoreEntity):
+        await self.debounce_send(0.5, send_bass)
+
+class HKAuraVolumeControl(DebounceMixin, NumberEntity, RestoreEntity):
     def __init__(self, device):
+        super().__init__()
         self._device = device
         self._volume = 20
-        self._debounce_task = None
-        self._pending_volume = None
 
     @property
     def name(self):
@@ -103,18 +114,12 @@ class HKAuraVolumeControl(NumberEntity, RestoreEntity):
             self._volume = int(last_state.state)
 
     async def async_set_native_value(self, value: float) -> None:
-        self._pending_volume = int(value)
-        if self._debounce_task and not self._debounce_task.done():
-            self._debounce_task.cancel()
-        self._debounce_task = asyncio.create_task(self._debounce_send())
+        self._pending_value = int(value)
 
-    async def _debounce_send(self):
-        try:
-            await asyncio.sleep(0.5)
-            volume = self._pending_volume
-            _LOGGER.debug(f"Setting volume to: {volume}")
-            await self._device.send_request("set_system_volume", para=volume)
-            self._volume = volume
+        async def send_volume(value):
+            _LOGGER.debug(f"Setting volume to: {value}")
+            await self._device.send_request("set_system_volume", para=value)
+            self._volume = value
             self.async_write_ha_state()
-        except asyncio.CancelledError:
-            pass
+
+        await self.debounce_send(0.5, send_volume)
