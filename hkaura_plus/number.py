@@ -1,5 +1,7 @@
 # number.py
 from homeassistant.components.number import NumberEntity
+from homeassistant.helpers.restore_state import RestoreEntity
+
 from . import DOMAIN
 import logging
 
@@ -12,10 +14,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         HKAuraVolumeControl(device)
     ], True)
 
-class HKAuraBassControl(NumberEntity):
+class HKAuraBassControl(NumberEntity, RestoreEntity):
     def __init__(self, device):
         self._device = device
         self._bass = 20
+
 
     @property
     def name(self):
@@ -41,6 +44,11 @@ class HKAuraBassControl(NumberEntity):
     def native_step(self):
         return 1
 
+    async def async_added_to_hass(self):
+            last_state = await self.async_get_last_state()
+            if last_state and last_state.state.isdigit():
+                self._bass = int(last_state.state)
+
     async def async_set_native_value(self, value: float) -> None:
         bass = int(value)
         _LOGGER.debug(f"Setting bass to: {bass}")
@@ -48,7 +56,7 @@ class HKAuraBassControl(NumberEntity):
         self._bass = bass
         self.async_write_ha_state()
 
-class HKAuraVolumeControl(NumberEntity):
+class HKAuraVolumeControl(NumberEntity, RestoreEntity):
     def __init__(self, device):
         self._device = device
         self._volume = 20
@@ -76,6 +84,11 @@ class HKAuraVolumeControl(NumberEntity):
     @property
     def native_step(self):
         return 1
+
+    async def async_added_to_hass(self):
+        last_state = await self.async_get_last_state()
+        if last_state and last_state.state.isdigit():
+            self._volume = int(last_state.state)
 
     async def async_set_native_value(self, value: float) -> None:
         volume = int(value)
