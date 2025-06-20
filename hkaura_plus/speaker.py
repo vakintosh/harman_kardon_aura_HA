@@ -26,11 +26,28 @@ with open(TEMPLATE_PATH, encoding='utf-8') as f:
     XML_TEMPLATE = f.read()
 
 class HKDevice:
+    """
+    Class to interact with the HK Aura speaker.
+    This class provides methods to send commands to the speaker using HTTP requests.
+    It supports actions like setting volume, bass level, EQ mode, and more.
+    The device communicates over HTTP, and the commands are sent as XML formatted strings.
+    The class uses aiohttp for asynchronous HTTP requests and async_timeout for request timeouts.
+    It also includes error handling for unknown actions and connection issues.
+    The XML template for requests is loaded from a file, allowing for easy modification of the request format.
+    """
     def __init__(self, host, port=DEFAULT_PORT):
+        """
+        Initialize the HKDevice with host and port.
+        """
         self.host = host
         self.port = port
 
     async def send_request(self, action, zone="Main Zone", para=None):
+        """
+        Send a request to the HK Aura speaker.
+        This method constructs an XML request based on the action and parameters provided.
+        It uses aiohttp to send the request and handles the response.
+        """
         url = f"http://{self.host}:{self.port}"
         headers = {'Content-Type': 'application/xml', 'Connection': 'close'}
 
@@ -61,4 +78,9 @@ class HKDevice:
 
 
     def send_command(self, action, para=None):
+        """
+        Send a command to the HK Aura speaker.
+        This method is a synchronous wrapper around the asynchronous send_request method.
+        It allows for easier integration with synchronous code.
+        """
         asyncio.run(self.send_request(action, para=para))
