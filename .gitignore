@@ -1,3 +1,6 @@
 .history
 configuration.yaml
 TODO.md
+arduino
+trace.txt
+wake_speaker.sh
