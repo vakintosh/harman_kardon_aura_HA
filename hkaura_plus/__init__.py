@@ -15,7 +15,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required("ip_address"): cv.string,
         vol.Required("port"): cv.port,
         vol.Optional("device_name"): cv.string,
-        vol.Optional(CONF_MEDIA_PLAYER_ENTITY): cv.entity_id,
+        vol.Optional(CONF_MEDIA_PLAYER_ENTITY): cv.entity_domain("media_player"),
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -36,9 +36,9 @@ def setup(hass, config):
         "media_player_entity": media_player_entity
     }
     
-    _LOGGER.info(f"HK Aura Plus setup completed for {ip}:{port}")
+    _LOGGER.info("HK Aura Plus setup completed for %s:%s", ip, port)
     if media_player_entity:
-        _LOGGER.info(f"Will sync volume with media_player: {media_player_entity}")
+        _LOGGER.info("Will sync volume with media_player: %s", media_player_entity)
 
     for platform in ("number", "switch"):
         load_platform(hass, platform, DOMAIN, {}, config)

@@ -33,8 +33,9 @@ Add the following to your `configuration.yaml`:
 ```yaml
 hkaura_plus:
   ip_address: 192.168.1.100  # Replace with your speaker's IP
-  port: 10025
-  device_name: Living Room Speaker
+  port: 10025  # Default port for HK Aura Plus
+  device_name: "Living Room Speaker"  # Optional: friendly name for the speaker
+  media_player_entity: "media_player.spotify"  # Optional: enables volume sync
 ```
 
 ### Configuration Options
