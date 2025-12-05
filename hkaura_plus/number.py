@@ -212,11 +212,14 @@ class HKAuraVolumeControl(DebounceMixin, NumberEntity, RestoreEntity):
         # Get volume_level attribute (0.0 to 1.0) and convert to 0-100
         volume_level = new_state.attributes.get("volume_level")
         if volume_level is not None:
-            new_volume = int(volume_level * 100)
-            if new_volume != self._volume:
-                _LOGGER.debug(f"Volume changed externally to: {new_volume}")
-                self._volume = new_volume
-                self.async_write_ha_state()
+            try:
+                new_volume = int(float(volume_level) * 100)
+                if new_volume != self._volume:
+                    _LOGGER.debug(f"Volume changed externally to: {new_volume}")
+                    self._volume = new_volume
+                    self.async_write_ha_state()
+            except (ValueError, TypeError) as e:
+                _LOGGER.error(f"Failed to process volume_level {volume_level}: {e}")
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the volume to a new value."""
