@@ -33,16 +33,24 @@ Add the following to your `configuration.yaml`:
 ```yaml
 hkaura_plus:
   ip_address: 192.168.1.100  # Replace with your speaker's IP
-  port: 10025
-  name: Living Room Speaker
+  port: 10025  # Default port for HK Aura Plus
+  device_name: "Living Room Speaker"  # Optional: friendly name for the speaker
+  media_player_entity: "media_player.spotify"  # Optional: enables volume sync
 ```
 
 ### Configuration Options
 
 | Option | Required | Description |
 |--------|----------|-------------|
-| `host` | Yes      | IP address of your HK Aura Plus speaker |
-| `name` | No       | Friendly name for the speaker entity    |
+| `ip_address` | Yes      | IP address of your HK Aura Plus speaker |
+| `port` | Yes      | Port number for communication (default: 10025) |
+| `device_name` | No       | Friendly name for the speaker entity    |
+| `media_player_entity` | No       | Entity ID of a media player to sync volume with (e.g., Music Assistant player) |
+
+### Volume Sync Feature
+
+If you configure `media_player_entity`, the volume number slider will automatically update when the volume is changed through the specified media player entity (e.g., Music Assistant). This ensures the UI stays in sync regardless of how you control the volume.
+
 
 ## Usage
 
