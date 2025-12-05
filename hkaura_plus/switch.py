@@ -13,7 +13,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     This function initializes the switches for EQ mode and mute control.
     It creates instances of HKAuraEQSwitch and HKAuraMuteSwitch and adds them to Home Assistant.
     """
-    device = hass.data[DOMAIN]
+    data = hass.data[DOMAIN]
+    device = data["device"]
     async_add_entities([
         HKAuraEQSwitch(device),
         HKAuraMuteSwitch(device)

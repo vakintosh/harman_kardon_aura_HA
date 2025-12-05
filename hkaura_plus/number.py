@@ -2,20 +2,21 @@ import asyncio
 import logging
 from homeassistant.components.number import NumberEntity
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE
 from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """
-    Set up the HK Aura number controls.
-    This function initializes the number controls for bass and volume.
-    It creates instances of HKAuraBassControl and HKAuraVolumeControl and adds them to Home Assistant.
-    """
-    device = hass.data[DOMAIN]
+    """Set up the HK Aura number controls."""
+    data = hass.data[DOMAIN]
+    device = data["device"]
+    media_player_entity = data.get("media_player_entity")
+    
     async_add_entities([
         HKAuraBassControl(device),
-        HKAuraVolumeControl(device)
+        HKAuraVolumeControl(device, media_player_entity)
     ], True)
 
 class DebounceMixin:
@@ -144,11 +145,13 @@ class HKAuraBassControl(DebounceMixin, NumberEntity, RestoreEntity):
 
 class HKAuraVolumeControl(DebounceMixin, NumberEntity, RestoreEntity):
     """Number control for the volume of the HK Aura speaker."""
-    def __init__(self, device):
+    def __init__(self, device, media_player_entity=None):
         """Initialize the volume control."""
         super().__init__()
         self._device = device
         self._volume = 20
+        self._unsubscribe = None
+        self._media_player_entity = media_player_entity
 
     @property
     def name(self):
@@ -179,12 +182,41 @@ class HKAuraVolumeControl(DebounceMixin, NumberEntity, RestoreEntity):
     def native_step(self):
         """Return the step size for volume adjustments."""
         return 1
-
+    
     async def async_added_to_hass(self):
-        """Restore the last state of the volume control."""
+        """Restore the last state of the volume control and subscribe to media_player changes."""
         last_state = await self.async_get_last_state()
         if last_state and last_state.state.isdigit():
             self._volume = int(last_state.state)
+        
+        # Subscribe to media_player state changes
+        if self._media_player_entity:
+            self._unsubscribe = async_track_state_change_event(
+                self.hass,
+                [self._media_player_entity],
+                self._handle_media_player_change
+            )
+            _LOGGER.info(f"Listening to volume changes from {self._media_player_entity}")
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe from state changes when removed."""
+        if self._unsubscribe:
+            self._unsubscribe()
+
+    async def _handle_media_player_change(self, event):
+        """Handle media_player state changes and update volume."""
+        new_state = event.data.get("new_state")
+        if new_state is None or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            return
+
+        # Get volume_level attribute (0.0 to 1.0) and convert to 0-100
+        volume_level = new_state.attributes.get("volume_level")
+        if volume_level is not None:
+            new_volume = int(volume_level * 100)
+            if new_volume != self._volume:
+                _LOGGER.debug(f"Volume changed externally to: {new_volume}")
+                self._volume = new_volume
+                self.async_write_ha_state()
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the volume to a new value."""
