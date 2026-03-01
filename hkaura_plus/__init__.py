@@ -40,7 +40,7 @@ def setup(hass, config):
     if media_player_entity:
         _LOGGER.info("Will sync volume with media_player: %s", media_player_entity)
 
-    for platform in ("number", "switch"):
+    for platform in ("number", "switch", "button"):
         load_platform(hass, platform, DOMAIN, {}, config)
 
     return True

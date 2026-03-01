@@ -1,14 +1,18 @@
 # HK Aura Plus Speaker Home Assistant Integration
 
-This project is a custom Home Assistant integration for controlling the Harman Kardon Aura Plus speaker over your local network. It provides Home Assistant entities for volume, bass, EQ mode, and mute control, allowing you to automate and manage your speaker directly from Home Assistant.
+A custom Home Assistant integration for controlling the Harman Kardon Aura Plus speaker over your local network. Provides Home Assistant entities for volume, bass, EQ mode, mute, and power control.
 
 ## Features
 
-- Control speaker volume
-- Adjust bass level
-- Change EQ modes
-- Mute/unmute the speaker
+- **Volume Control** — Adjust speaker volume (0–100)
+- **Bass Control** — Fine-tune bass level (0–100)
+- **EQ Mode** — Toggle between Basic and Stereo Widening
+- **Mute/Unmute** — Toggle switch
+- **Power Off** — Turn off speaker via button
+- **Volume Sync** — Optionally sync with a media_player entity
 - Seamless integration with Home Assistant UI and automations
+
+> **⚠️ Note**: The power-off button fully shuts down the speaker. To turn it back on, you must use the physical power button, the official HK Remote app, or a [Bluetooth wake script](#bluetooth-wake-from-standby).
 
 ## Requirements
 
@@ -17,24 +21,19 @@ This project is a custom Home Assistant integration for controlling the Harman K
 
 ## Installation
 
-1. **Download the integration:**
-    - Clone or download this repository.
-
-2. **Copy files:**
-    - Copy the `hkaura_plus` directory to your Home Assistant `custom_components` folder.
-
-3. **Restart Home Assistant:**
-    - Restart Home Assistant to detect the new integration.
+1. **Clone or download** this repository.
+2. **Copy** the `hkaura_plus/` directory to your Home Assistant `custom_components/` folder.
+3. **Restart** Home Assistant to detect the new integration.
 
 ## Configuration
 
-Add the following to your `configuration.yaml`:
+Add the following to your `configuration.yaml` (see [example](docs/configuration.yaml.example)):
 
 ```yaml
 hkaura_plus:
   ip_address: 192.168.1.100  # Replace with your speaker's IP
   port: 10025  # Default port for HK Aura Plus
-  device_name: "Living Room Speaker"  # Optional: friendly name for the speaker
+  device_name: "Living Room Speaker"  # Optional: friendly name
   media_player_entity: "media_player.spotify"  # Optional: enables volume sync
 ```
 
@@ -42,23 +41,33 @@ hkaura_plus:
 
 | Option | Required | Description |
 |--------|----------|-------------|
-| `ip_address` | Yes      | IP address of your HK Aura Plus speaker |
-| `port` | Yes      | Port number for communication (default: 10025) |
-| `device_name` | No       | Friendly name for the speaker entity    |
-| `media_player_entity` | No       | Entity ID of a media player to sync volume with (e.g., Music Assistant player) |
+| `ip_address` | Yes | IP address of your HK Aura Plus speaker |
+| `port` | Yes | Port number for communication (default: 10025) |
+| `device_name` | No | Friendly name for the speaker entity |
+| `media_player_entity` | No | Entity ID of a media player to sync volume with |
 
-### Volume Sync Feature
+### Volume Sync
 
-If you configure `media_player_entity`, the volume number slider will automatically update when the volume is changed through the specified media player entity (e.g., Music Assistant). This ensures the UI stays in sync regardless of how you control the volume.
-
+If you configure `media_player_entity`, the volume slider will automatically update when volume is changed through the specified media player (e.g., Music Assistant). This keeps the UI in sync regardless of how you control the volume.
 
 ## Usage
 
-After configuration and restart, you will see new entities in Home Assistant for your HK Aura Plus speaker. You can control volume, bass, EQ, and mute from the UI or use them in automations.
+After configuration and restart, the following entities appear in Home Assistant:
 
-## Dashboard 
+| Entity | Description |
+|--------|-------------|
+| `number.hk_aura_volume` | Volume control (0–100) |
+| `number.hk_aura_bass` | Bass level (0–100) |
+| `switch.hk_aura_eq_mode` | EQ mode toggle |
+| `switch.hk_aura_mute` | Mute toggle |
+| `button.hk_aura_power_off` | Power off button |
+
+## Dashboard
 
 ![HK Aura Plus Speaker](img/HA_HK_Aura_App.png)
+
+<details>
+<summary>Lovelace YAML</summary>
 
 ```yaml
 type: grid
@@ -68,10 +77,37 @@ cards:
     heading: HK Aura App
   - type: entities
     entities:
-      - entity: number.hk_aura_bass_level
-      - entity: switch.hk_aura_eq_mode
       - entity: number.hk_aura_volume
+      - entity: number.hk_aura_bass
+      - entity: switch.hk_aura_eq_mode
       - entity: switch.hk_aura_mute
+      - entity: button.hk_aura_power_off
+```
+
+</details>
+
+## Bluetooth Wake from Standby
+
+The speaker's WiFi control port (TCP 10025) only opens after it receives a Bluetooth A2DP audio stream. Scripts are provided to automate this:
+
+| Script | Platform | Description |
+|--------|----------|-------------|
+| [`scripts/wake_speaker_mac.sh`](scripts/wake_speaker_mac.sh) | macOS | Uses blueutil + mpv |
+| [`scripts/wake_speaker_linux.sh`](scripts/wake_speaker_linux.sh) | Linux / Raspberry Pi | Uses bluetoothctl + PipeWire + mpv |
+| [`scripts/setup_wake_speaker.sh`](scripts/setup_wake_speaker.sh) | Linux | Interactive setup wizard |
+| [`scripts/arduino_esp32_wake.ino`](scripts/arduino_esp32_wake.ino) | ESP32 | HTTP-triggered BT wake server |
+
+For the full Linux setup guide, see [docs/linux_wake_setup.md](docs/linux_wake_setup.md).
+
+## Project Structure
+
+```
+├── hkaura_plus/          # Home Assistant custom component
+├── scripts/              # Wake scripts & test utilities
+├── docs/                 # Setup guides & test results
+├── research/             # BT traces, network captures, dev notes
+├── apk_analysis/         # Decompiled HK Remote APK resources
+└── img/                  # Screenshots
 ```
 
 ## Troubleshooting
@@ -86,4 +122,4 @@ This integration is not affiliated with or endorsed by Harman Kardon.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE) for details.

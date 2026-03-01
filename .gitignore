@@ -1,6 +1,24 @@
-.history
-configuration.yaml
+# IDE / editor history
+.history/
+
+# Generated config (contains user-specific values)
+*.conf
+wake_speaker.conf
+
+# APK binaries
+*.apk
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Project files
+research/
 TODO.md
-arduino
-trace.txt
-wake_speaker.sh
+docs/
+apk_analysis/

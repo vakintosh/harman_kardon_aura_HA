@@ -143,6 +143,7 @@ class HKAuraBassControl(DebounceMixin, NumberEntity, RestoreEntity):
 
         await self.debounce_send(0.5, send_bass)
 
+
 class HKAuraVolumeControl(DebounceMixin, NumberEntity, RestoreEntity):
     """Number control for the volume of the HK Aura speaker."""
     def __init__(self, device, media_player_entity=None):
