@@ -95,18 +95,13 @@ The speaker's WiFi control port (TCP 10025) only opens after it receives a Bluet
 | [`scripts/wake_speaker_mac.sh`](scripts/wake_speaker_mac.sh) | macOS | Uses blueutil + mpv |
 | [`scripts/wake_speaker_linux.sh`](scripts/wake_speaker_linux.sh) | Linux / Raspberry Pi | Uses bluetoothctl + PipeWire + mpv |
 | [`scripts/setup_wake_speaker.sh`](scripts/setup_wake_speaker.sh) | Linux | Interactive setup wizard |
-| [`scripts/arduino_esp32_wake.ino`](scripts/arduino_esp32_wake.ino) | ESP32 | HTTP-triggered BT wake server |
 
-For the full Linux setup guide, see [docs/linux_wake_setup.md](docs/linux_wake_setup.md).
 
 ## Project Structure
 
 ```
 ├── hkaura_plus/          # Home Assistant custom component
 ├── scripts/              # Wake scripts & test utilities
-├── docs/                 # Setup guides & test results
-├── research/             # BT traces, network captures, dev notes
-├── apk_analysis/         # Decompiled HK Remote APK resources
 └── img/                  # Screenshots
 ```
 
