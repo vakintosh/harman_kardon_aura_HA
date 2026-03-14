@@ -8,7 +8,7 @@ from typing import Any
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -59,7 +59,8 @@ class DebounceMixin:
             self._debounce_task.cancel()
 
         self._debounce_task = asyncio.create_task(
-            self._debounce_worker(delay_seconds, send_func)
+            self._debounce_worker(delay_seconds, send_func),
+            name="hkaura_debounce",
         )
 
     async def _debounce_worker(
@@ -74,6 +75,8 @@ class DebounceMixin:
                 await send_func(self._pending_value)
         except asyncio.CancelledError:
             pass
+        except Exception:
+            _LOGGER.exception("Error in debounced send")
 
 
 class HKAuraBassControl(DebounceMixin, NumberEntity, RestoreEntity):
@@ -81,7 +84,6 @@ class HKAuraBassControl(DebounceMixin, NumberEntity, RestoreEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "bass"
-    _attr_name = "Bass"
     _attr_native_min_value = 0
     _attr_native_max_value = 100
     _attr_native_step = 1
@@ -138,7 +140,6 @@ class HKAuraVolumeControl(DebounceMixin, NumberEntity, RestoreEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "volume"
-    _attr_name = "Volume"
     _attr_native_min_value = 0
     _attr_native_max_value = 100
     _attr_native_step = 1
@@ -199,7 +200,9 @@ class HKAuraVolumeControl(DebounceMixin, NumberEntity, RestoreEntity):
         if self._unsubscribe:
             self._unsubscribe()
 
-    async def _handle_media_player_change(self, event: Event) -> None:
+    async def _handle_media_player_change(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
         """Handle media_player state changes and update volume."""
         new_state = event.data.get("new_state")
         if new_state is None or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
@@ -225,10 +228,7 @@ class HKAuraVolumeControl(DebounceMixin, NumberEntity, RestoreEntity):
                 _LOGGER.error(
                     "Failed to process volume_level %s: %s", volume_level, err
                 )
-            except (OSError, TimeoutError) as err:
-                _LOGGER.error(
-                    "Failed to send volume to speaker: %s", err
-                )
+
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the volume to a new value."""

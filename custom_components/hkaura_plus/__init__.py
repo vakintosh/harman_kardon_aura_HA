@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_MEDIA_PLAYER_ENTITY, DOMAIN as DOMAIN, PLATFORMS
+from .const import CONF_MEDIA_PLAYER_ENTITY, DOMAIN, PLATFORMS
 from .speaker import HKDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 type HKAuraConfigEntry = ConfigEntry[HKAuraData]
 
 
-@dataclass
+@dataclass(slots=True)
 class HKAuraData:
     """Runtime data for HK Aura Plus."""
 

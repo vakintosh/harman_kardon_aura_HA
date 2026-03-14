@@ -66,7 +66,7 @@ class HKAuraPlusConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             writer.close()
             await writer.wait_closed()
-        except (OSError, asyncio.TimeoutError):
+        except (OSError, TimeoutError):
             _LOGGER.debug("Cannot connect to %s:%s", host, port)
             return False
         return True

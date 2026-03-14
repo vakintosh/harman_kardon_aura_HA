@@ -40,7 +40,6 @@ class HKAuraEQSwitch(SwitchEntity, RestoreEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "eq_mode"
-    _attr_name = "EQ mode"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_should_poll = False
 
@@ -65,7 +64,7 @@ class HKAuraEQSwitch(SwitchEntity, RestoreEntity):
         """Turn on the EQ mode."""
         try:
             await self._device.send_request("set_EQ_mode", para="on")
-        except (OSError, TimeoutError) as err:
+        except (OSError, TimeoutError, ValueError) as err:
             raise HomeAssistantError(
                 f"Failed to turn on EQ mode: {err}"
             ) from err
@@ -76,7 +75,7 @@ class HKAuraEQSwitch(SwitchEntity, RestoreEntity):
         """Turn off the EQ mode."""
         try:
             await self._device.send_request("set_EQ_mode", para="off")
-        except (OSError, TimeoutError) as err:
+        except (OSError, TimeoutError, ValueError) as err:
             raise HomeAssistantError(
                 f"Failed to turn off EQ mode: {err}"
             ) from err
@@ -96,7 +95,6 @@ class HKAuraMuteSwitch(SwitchEntity, RestoreEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "mute"
-    _attr_name = "Mute"
     _attr_should_poll = False
 
     def __init__(self, device: HKDevice, entry_id: str) -> None:
@@ -120,7 +118,7 @@ class HKAuraMuteSwitch(SwitchEntity, RestoreEntity):
         """Mute the speaker."""
         try:
             await self._device.send_request("mute-on")
-        except (OSError, TimeoutError) as err:
+        except (OSError, TimeoutError, ValueError) as err:
             raise HomeAssistantError(
                 f"Failed to mute speaker: {err}"
             ) from err
@@ -131,7 +129,7 @@ class HKAuraMuteSwitch(SwitchEntity, RestoreEntity):
         """Unmute the speaker."""
         try:
             await self._device.send_request("mute-off")
-        except (OSError, TimeoutError) as err:
+        except (OSError, TimeoutError, ValueError) as err:
             raise HomeAssistantError(
                 f"Failed to unmute speaker: {err}"
             ) from err

@@ -32,7 +32,6 @@ class HKAuraPowerOffButton(ButtonEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "power_off"
-    _attr_name = "Power off"
 
     def __init__(self, device: HKDevice, entry_id: str) -> None:
         """Initialize the button."""
@@ -55,7 +54,7 @@ class HKAuraPowerOffButton(ButtonEntity):
         _LOGGER.debug("Powering off HK Aura Plus speaker")
         try:
             await self._device.send_request("power-off")
-        except (OSError, TimeoutError) as err:
+        except (OSError, TimeoutError, ValueError) as err:
             raise HomeAssistantError(
                 f"Failed to power off speaker: {err}"
             ) from err

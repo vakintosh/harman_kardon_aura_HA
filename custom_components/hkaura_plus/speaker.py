@@ -27,6 +27,8 @@ XML_TEMPLATE = """\
 class HKDevice:
     """Interact with the HK Aura speaker over TCP."""
 
+    __slots__ = ("host", "port", "_available")
+
     def __init__(self, host: str, port: int = DEFAULT_PORT) -> None:
         """Initialize the HKDevice."""
         self.host = host
@@ -71,7 +73,7 @@ class HKDevice:
                 _LOGGER.debug(
                     "Response: %s", response.decode("utf-8", errors="ignore")
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 pass
 
             writer.close()
@@ -80,6 +82,7 @@ class HKDevice:
             self._available = True
             _LOGGER.debug("Sent action=%s, para=%s", action, para)
 
-        except (OSError, asyncio.TimeoutError) as err:
+        except (OSError, TimeoutError) as err:
             self._available = False
             _LOGGER.error("Cannot reach %s:%s: %s", self.host, self.port, err)
+            raise
