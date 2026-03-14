@@ -1,5 +1,7 @@
 # HK Aura Plus Speaker Home Assistant Integration
 
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+
 A custom Home Assistant integration for controlling the Harman Kardon Aura Plus speaker over your local network. Provides Home Assistant entities for volume, bass, EQ mode, mute, and power control.
 
 ## Features
@@ -16,16 +18,18 @@ A custom Home Assistant integration for controlling the Harman Kardon Aura Plus 
 
 ## Requirements
 
-- Home Assistant (2022.0 or newer recommended)
+- Home Assistant 2024.1.0 or newer
 - Harman Kardon Aura Plus speaker connected to your local network
 
 ## Installation
 
 ### HACS (Recommended)
 
-1. Add this repository as a **custom repository** in HACS.
-2. Search for "HK Aura Plus Speaker" and install.
-3. Restart Home Assistant.
+1. Open HACS in Home Assistant.
+2. Go to **Integrations** → click the **⋮** menu (top right) → **Custom repositories**.
+3. Add `https://github.com/vakintosh/harman_kardon_aura_HA` with category **Integration**.
+4. Search for **HK Aura Plus Speaker** and install.
+5. Restart Home Assistant.
 
 ### Manual
 
@@ -53,7 +57,7 @@ See [configuration.yaml.example](docs/configuration.yaml.example) for optional t
 
 ### Volume Sync
 
-If you configure `media_player_entity`, the volume slider will automatically update when volume is changed through the specified media player (e.g., Music Assistant). This keeps the UI in sync regardless of how you control the volume.
+If you configure `media_player_entity` (e.g., `media_player.hk_aura_airplay` from Music Assistant), volume changes on the media player will automatically be sent to the physical speaker. This keeps the speaker volume in sync regardless of how you control it.
 
 ## Usage
 
@@ -110,6 +114,10 @@ The speaker's WiFi control port (TCP 10025) only opens after it receives a Bluet
 ├── scripts/              # Wake scripts & test utilities
 └── img/                  # Screenshots
 ```
+
+## How It Works
+
+The speaker exposes a TCP control port (default 10025) that accepts XML commands. The integration sends XML payloads over raw TCP — no HTTP framing is used. The speaker processes the command and optionally returns a status XML response.
 
 ## Troubleshooting
 
