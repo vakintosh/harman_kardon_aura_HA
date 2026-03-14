@@ -1,0 +1,13 @@
+{
+  "domain": "hkaura_plus",
+  "name": "HK Aura Plus Speaker",
+  "version": "0.3.0",
+  "config_flow": true,
+  "documentation": "https://github.com/vakintosh/harman_kardon_aura_HA",
+  "integration_type": "device",
+  "dependencies": [],
+  "codeowners": ["@vakintosh"],
+  "issue_tracker": "https://github.com/vakintosh/harman_kardon_aura_HA/issues",
+  "requirements": [],
+  "iot_class": "assumed_state"
+}

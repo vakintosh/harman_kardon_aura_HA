@@ -1,0 +1,25 @@
+{
+  "entity": {
+    "button": {
+      "power_off": {
+        "default": "mdi:power"
+      }
+    },
+    "number": {
+      "bass": {
+        "default": "mdi:music-note"
+      },
+      "volume": {
+        "default": "mdi:volume-high"
+      }
+    },
+    "switch": {
+      "eq_mode": {
+        "default": "mdi:equalizer"
+      },
+      "mute": {
+        "default": "mdi:volume-off"
+      }
+    }
+  }
+}

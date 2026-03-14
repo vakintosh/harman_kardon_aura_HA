@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HK Aura Plus Speaker",
+        "description": "Set up your Harman Kardon Aura Plus speaker.",
+        "data": {
+          "host": "IP Address",
+          "port": "Port",
+          "media_player_entity": "Media Player Entity (optional)"
+        },
+        "data_description": {
+          "host": "The IP address of your HK Aura Plus speaker.",
+          "port": "The TCP port for communication (default: 10025).",
+          "media_player_entity": "Entity ID of a media player to sync volume with (e.g. media_player.spotify)."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the speaker. Please check the IP address and port."
+    },
+    "abort": {
+      "already_configured": "This speaker is already configured."
+    }
+  },
+  "entity": {
+    "button": {
+      "power_off": {
+        "name": "Power off"
+      }
+    },
+    "number": {
+      "bass": {
+        "name": "Bass"
+      },
+      "volume": {
+        "name": "Volume"
+      }
+    },
+    "switch": {
+      "eq_mode": {
+        "name": "EQ mode"
+      },
+      "mute": {
+        "name": "Mute"
+      }
+    }
+  }
+}
