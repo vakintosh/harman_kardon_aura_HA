@@ -16,6 +16,7 @@ Thumbs.db
 __pycache__/
 *.pyc
 *.pyo
+.github/
 
 # Project files
 research/

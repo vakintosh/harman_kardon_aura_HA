@@ -21,30 +21,35 @@ A custom Home Assistant integration for controlling the Harman Kardon Aura Plus 
 
 ## Installation
 
+### HACS (Recommended)
+
+1. Add this repository as a **custom repository** in HACS.
+2. Search for "HK Aura Plus Speaker" and install.
+3. Restart Home Assistant.
+
+### Manual
+
 1. **Clone or download** this repository.
-2. **Copy** the `hkaura_plus/` directory to your Home Assistant `custom_components/` folder.
-3. **Restart** Home Assistant to detect the new integration.
+2. **Copy** the `custom_components/hkaura_plus/` directory to your Home Assistant `custom_components/` folder.
+3. **Restart** Home Assistant.
 
 ## Configuration
 
-Add the following to your `configuration.yaml` (see [example](docs/configuration.yaml.example)):
+This integration is configured via the UI:
 
-```yaml
-hkaura_plus:
-  ip_address: 192.168.1.100  # Replace with your speaker's IP
-  port: 10025  # Default port for HK Aura Plus
-  device_name: "Living Room Speaker"  # Optional: friendly name
-  media_player_entity: "media_player.spotify"  # Optional: enables volume sync
-```
+1. Go to **Settings → Devices & Services → Add Integration**.
+2. Search for **HK Aura Plus**.
+3. Enter your speaker's IP address and port.
+
+See [configuration.yaml.example](docs/configuration.yaml.example) for optional template sensors.
 
 ### Configuration Options
 
 | Option | Required | Description |
 |--------|----------|-------------|
-| `ip_address` | Yes | IP address of your HK Aura Plus speaker |
-| `port` | Yes | Port number for communication (default: 10025) |
-| `device_name` | No | Friendly name for the speaker entity |
-| `media_player_entity` | No | Entity ID of a media player to sync volume with |
+| Host | Yes | IP address or hostname of your HK Aura Plus speaker |
+| Port | Yes | Port number for communication (default: 10025) |
+| Media Player Entity | No | Entity ID of a media player to sync volume with |
 
 ### Volume Sync
 
@@ -100,7 +105,8 @@ The speaker's WiFi control port (TCP 10025) only opens after it receives a Bluet
 ## Project Structure
 
 ```
-├── hkaura_plus/          # Home Assistant custom component
+├── custom_components/
+│   └── hkaura_plus/      # Home Assistant custom component
 ├── scripts/              # Wake scripts & test utilities
 └── img/                  # Screenshots
 ```
