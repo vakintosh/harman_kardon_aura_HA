@@ -45,7 +45,6 @@ This integration is configured via the UI:
 2. Search for **HK Aura Plus**.
 3. Enter your speaker's IP address and port.
 
-See [configuration.yaml.example](docs/configuration.yaml.example) for optional template sensors.
 
 ### Configuration Options
 
