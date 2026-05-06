@@ -12,7 +12,21 @@
         "data_description": {
           "host": "The IP address of your HK Aura Plus speaker.",
           "port": "The TCP port for communication (default: 10025).",
-          "media_player_entity": "Entity ID of a media player to sync volume with (e.g. media_player.spotify)."
+          "media_player_entity": "Entity ID of the Music Assistant media player for this speaker (e.g. media_player.hk_aura_wf)."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure HK Aura Plus Speaker",
+        "description": "Update the connection settings or linked Music Assistant media player entity.",
+        "data": {
+          "host": "IP Address",
+          "port": "Port",
+          "media_player_entity": "Media Player Entity (optional)"
+        },
+        "data_description": {
+          "host": "The IP address of your HK Aura Plus speaker.",
+          "port": "The TCP port for communication (default: 10025).",
+          "media_player_entity": "Entity ID of the Music Assistant media player for this speaker (e.g. media_player.hk_aura_wf)."
         }
       }
     },
@@ -20,7 +34,8 @@
       "cannot_connect": "Cannot connect to the speaker. Please check the IP address and port."
     },
     "abort": {
-      "already_configured": "This speaker is already configured."
+      "already_configured": "This speaker is already configured.",
+      "reconfigure_successful": "Re-configuration was successful."
     }
   },
   "entity": {

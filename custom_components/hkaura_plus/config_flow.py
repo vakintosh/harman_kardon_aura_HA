@@ -57,6 +57,45 @@ class HKAuraPlusConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration — allows updating media_player_entity after MA updates."""
+        errors: dict[str, str] = {}
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry is not None
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = user_input[CONF_PORT]
+
+            if await self._test_connection(host, port):
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data=user_input,
+                    reason="reconfigure_successful",
+                )
+            errors["base"] = "cannot_connect"
+
+        # Pre-fill form with existing values
+        current = entry.data
+        reconfigure_schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=current.get(CONF_HOST, "")): str,
+                vol.Required(CONF_PORT, default=current.get(CONF_PORT, DEFAULT_PORT)): int,
+                vol.Optional(
+                    CONF_MEDIA_PLAYER_ENTITY,
+                    default=current.get(CONF_MEDIA_PLAYER_ENTITY, ""),
+                ): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=reconfigure_schema,
+            errors=errors,
+        )
+
     async def _test_connection(self, host: str, port: int) -> bool:
         """Test if we can connect to the device."""
         try:
