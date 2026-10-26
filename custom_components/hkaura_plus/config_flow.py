@@ -53,9 +53,11 @@ async def validate_bluetooth(mac: str) -> str | None:
         return "bluetooth_unsupported"
     try:
         await BluetoothSpeaker(mac).power_state()
-    except RfcommUnavailable:
+    except RfcommUnavailable as err:
+        _LOGGER.warning("Bluetooth unavailable on this host: %s", err)
         return "bluetooth_unsupported"
-    except (RfcommError, ProtocolError):
+    except (RfcommError, ProtocolError) as err:
+        _LOGGER.warning("Speaker %s did not answer over Bluetooth: %s", mac, err)
         return "bluetooth_unreachable"
     return None
 
