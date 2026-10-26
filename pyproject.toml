@@ -12,3 +12,7 @@ dev = [
     "pytest",
     "pytest-homeassistant-custom-component",
 ]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = ["live: needs a real speaker (HK_LIVE_MAC); skipped otherwise"]
