@@ -40,6 +40,17 @@ class HKDevice:
         """Return whether the device is reachable."""
         return self._available
 
+    async def async_port_open(self, timeout: float = 2) -> bool:
+        """Return True if the Wi-Fi control port accepts a TCP connection."""
+        try:
+            _, writer = await asyncio.wait_for(
+                asyncio.open_connection(self.host, self.port), timeout=timeout
+            )
+        except (OSError, TimeoutError):
+            return False
+        writer.close()
+        return True
+
     async def send_request(
         self, action: str, zone: str = "Main Zone", para: str | int | None = None
     ) -> None:

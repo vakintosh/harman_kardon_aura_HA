@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Final
 
@@ -18,10 +19,21 @@ from .rfcomm import RFCOMM_CHANNEL, RfcommLink, open_link
 _LOGGER = logging.getLogger(__name__)
 
 CONFIRM_INTERVAL: Final = 1.0
+# Seconds to wait for the Wi-Fi control port after a wake. A cold boot was
+# measured at 25 s on hardware, so 60 s leaves headroom.
+DEFAULT_PORT_WAIT: Final = 60
 
 Opener = Callable[..., Awaitable[RfcommLink]]
 Sleeper = Callable[[float], Awaitable[None]]
 PortReady = Callable[[], Awaitable[bool]]
+
+
+@dataclass(frozen=True, slots=True)
+class BtStatus:
+    """Snapshot read over one connection; ``source`` is None in standby."""
+
+    power: bool
+    source: proto.Source | None
 
 
 class WakeResult(Enum):
@@ -64,6 +76,18 @@ class BluetoothSpeaker:
             finally:
                 link.close()
 
+    async def status(self) -> BtStatus:
+        """Read power, and the source if the speaker is on, in one connection."""
+        async with self._lock:
+            link = await self._link()
+            try:
+                if not await self._read_power(link):
+                    return BtStatus(power=False, source=None)
+                reply = await link.request(proto.QUERY_SOURCE, proto.TYPE_SOURCE)
+                return BtStatus(power=True, source=proto.decode_source(reply))
+            finally:
+                link.close()
+
     async def source(self) -> proto.Source:
         """Return the current input source."""
         async with self._lock:
@@ -88,7 +112,7 @@ class BluetoothSpeaker:
         *,
         confirm_attempts: int = 10,
         port_ready: PortReady | None = None,
-        port_attempts: int = 30,
+        port_wait: float = DEFAULT_PORT_WAIT,
     ) -> WakeResult:
         """Wake the speaker from standby, safely.
 
@@ -106,7 +130,7 @@ class BluetoothSpeaker:
             finally:
                 link.close()
         if port_ready is not None:
-            await self._wait_port(port_ready, port_attempts)
+            await self._wait_port(port_ready, port_wait)
         return WakeResult.WOKE
 
     @staticmethod
@@ -121,8 +145,8 @@ class BluetoothSpeaker:
                 return
         raise WakeFailed(f"speaker did not report power on after {attempts} checks")
 
-    async def _wait_port(self, port_ready: PortReady, attempts: int) -> None:
-        for _ in range(attempts):
+    async def _wait_port(self, port_ready: PortReady, port_wait: float) -> None:
+        for _ in range(max(1, int(port_wait / CONFIRM_INTERVAL))):
             if await port_ready():
                 return
             await self._sleep(CONFIRM_INTERVAL)

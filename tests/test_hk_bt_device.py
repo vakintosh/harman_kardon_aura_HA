@@ -11,11 +11,14 @@ class FakeLink:
 
     def __init__(self, power_replies):
         self.power_replies = list(power_replies)  # each: bytes | Exception
+        self.source_reply = b"\x0e\x02\x01"  # airplay
         self.sent = []
         self.closed = False
 
     async def request(self, frame, reply_type, *, timeout=3.0, retries=2):
         self.sent.append(frame)
+        if frame == p.QUERY_SOURCE:
+            return self.source_reply
         assert frame == p.QUERY_POWER
         r = self.power_replies.pop(0) if len(self.power_replies) > 1 else self.power_replies[0]
         if isinstance(r, Exception):
@@ -95,7 +98,7 @@ async def test_wake_waits_for_port_when_given():
         calls.append(1)
         return len(calls) >= 2
 
-    result = await speaker_with(link).wake(port_ready=port_ready, port_attempts=5)
+    result = await speaker_with(link).wake(port_ready=port_ready, port_wait=5)
     assert result is dev.WakeResult.WOKE
     assert len(calls) == 2
 
@@ -107,4 +110,38 @@ async def test_wake_port_never_ready_raises():
         return False
 
     with pytest.raises(dev.WakeFailed):
-        await speaker_with(link).wake(port_ready=never, port_attempts=2)
+        await speaker_with(link).wake(port_ready=never, port_wait=2)
+
+
+def test_default_port_wait_is_60_seconds():
+    assert dev.DEFAULT_PORT_WAIT == 60
+    import inspect
+    sig = inspect.signature(dev.BluetoothSpeaker.wake)
+    assert sig.parameters["port_wait"].default == dev.DEFAULT_PORT_WAIT
+
+
+async def test_port_wait_is_in_seconds_and_configurable():
+    link = FakeLink([OFF, ON])
+    calls = []
+
+    async def never():
+        calls.append(1)
+        return False
+
+    with pytest.raises(dev.WakeFailed):
+        await speaker_with(link).wake(port_ready=never, port_wait=7)
+    assert len(calls) == 7  # 1s poll interval
+
+
+async def test_status_awake_includes_source():
+    link = FakeLink([ON])
+    st = await speaker_with(link).status()
+    assert st == dev.BtStatus(power=True, source=p.Source.AIRPLAY)
+    assert link.closed
+
+
+async def test_status_standby_skips_source():
+    link = FakeLink([OFF])
+    st = await speaker_with(link).status()
+    assert st == dev.BtStatus(power=False, source=None)
+    assert p.QUERY_SOURCE not in link.sent

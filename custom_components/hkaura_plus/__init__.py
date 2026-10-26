@@ -4,11 +4,25 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_MEDIA_PLAYER_ENTITY, DOMAIN, PLATFORMS
+from .const import (
+    CONF_BT_MAC,
+    CONF_MEDIA_PLAYER_ENTITY,
+    CONF_WAKE_TIMEOUT,
+    DEFAULT_WAKE_TIMEOUT,
+    DOMAIN,
+    PLATFORMS,
+    SERVICE_WAKE,
+)
+from .coordinator import HKAuraBtCoordinator
+from .hk_bt_device import BluetoothSpeaker
 from .speaker import HKDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,6 +36,44 @@ class HKAuraData:
 
     device: HKDevice
     media_player_entity: str | None
+    bluetooth: BluetoothSpeaker | None = None
+    coordinator: HKAuraBtCoordinator | None = None
+
+
+WAKE_SCHEMA = vol.Schema(
+    {
+        vol.Optional("config_entry_id"): str,
+        vol.Optional("timeout"): vol.All(vol.Coerce(float), vol.Range(min=1, max=600)),
+    }
+)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Register the integration-wide wake service."""
+
+    async def _handle_wake(call: ServiceCall) -> None:
+        entries = [
+            e
+            for e in hass.config_entries.async_entries(DOMAIN)
+            if getattr(e, "runtime_data", None) is not None
+            and e.runtime_data.coordinator is not None
+        ]
+        wanted = call.data.get("config_entry_id")
+        if wanted:
+            entries = [e for e in entries if e.entry_id == wanted]
+        if not entries:
+            raise ServiceValidationError(
+                "No speaker with Bluetooth configured (add a Bluetooth MAC in the "
+                "integration options)."
+            )
+        if len(entries) > 1:
+            raise ServiceValidationError(
+                "Several speakers have Bluetooth; pass config_entry_id."
+            )
+        await entries[0].runtime_data.coordinator.async_wake(call.data.get("timeout"))
+
+    hass.services.async_register(DOMAIN, SERVICE_WAKE, _handle_wake, schema=WAKE_SCHEMA)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HKAuraConfigEntry) -> bool:
@@ -31,10 +83,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: HKAuraConfigEntry) -> bo
         port=entry.data[CONF_PORT],
     )
 
-    entry.runtime_data = HKAuraData(
+    data = HKAuraData(
         device=device,
         media_player_entity=entry.data.get(CONF_MEDIA_PLAYER_ENTITY),
     )
+    if mac := entry.data.get(CONF_BT_MAC):
+        data.bluetooth = BluetoothSpeaker(mac)
+        data.coordinator = HKAuraBtCoordinator(
+            hass,
+            entry,
+            data.bluetooth,
+            device,
+            entry.data.get(CONF_WAKE_TIMEOUT, DEFAULT_WAKE_TIMEOUT),
+        )
+        # Never block or fail setup because of Bluetooth: Wi-Fi entities must
+        # keep working. Failures show up as unavailable Bluetooth entities.
+        await data.coordinator.async_refresh()
+    entry.runtime_data = data
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

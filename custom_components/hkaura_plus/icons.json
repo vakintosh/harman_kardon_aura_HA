@@ -3,6 +3,9 @@
     "button": {
       "power_off": {
         "default": "mdi:power"
+      },
+      "wake": {
+        "default": "mdi:power-on"
       }
     },
     "number": {
@@ -20,6 +23,21 @@
       "mute": {
         "default": "mdi:volume-off"
       }
+    },
+    "binary_sensor": {
+      "bt_power": {
+        "default": "mdi:speaker"
+      }
+    },
+    "select": {
+      "source": {
+        "default": "mdi:import"
+      }
+    }
+  },
+  "services": {
+    "wake": {
+      "service": "mdi:power-on"
     }
   }
 }

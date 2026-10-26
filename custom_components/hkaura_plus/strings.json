@@ -21,17 +21,36 @@
         "data": {
           "host": "IP Address",
           "port": "Port",
-          "media_player_entity": "Media Player Entity (optional)"
+          "media_player_entity": "Media Player Entity (optional)",
+          "bluetooth_mac": "Bluetooth MAC (optional)",
+          "wake_timeout": "Wake wait (seconds)"
         },
         "data_description": {
           "host": "The IP address of your HK Aura Plus speaker.",
           "port": "The TCP port for communication (default: 10025).",
-          "media_player_entity": "Entity ID of the Music Assistant media player for this speaker (e.g. media_player.hk_aura_wf)."
+          "media_player_entity": "Entity ID of the Music Assistant media player for this speaker (e.g. media_player.hk_aura_wf).",
+          "bluetooth_mac": "Bluetooth address of the speaker, e.g. B8:69:C2:15:29:FD. Leave empty to use Wi-Fi only. The speaker must be paired with the machine running Home Assistant, and that machine needs its own Bluetooth adapter (Bluetooth proxies cannot be used).",
+          "wake_timeout": "How long to wait for the Wi-Fi port after waking the speaker. A cold boot takes about 25 seconds."
+        }
+      },
+      "bluetooth": {
+        "title": "Bluetooth (optional)",
+        "description": "Enable wake-from-standby and power/source control over Bluetooth. Leave the MAC empty to skip.",
+        "data": {
+          "bluetooth_mac": "Bluetooth MAC (optional)",
+          "wake_timeout": "Wake wait (seconds)"
+        },
+        "data_description": {
+          "bluetooth_mac": "Bluetooth address of the speaker, e.g. B8:69:C2:15:29:FD. Leave empty to use Wi-Fi only. The speaker must be paired with the machine running Home Assistant, and that machine needs its own Bluetooth adapter (Bluetooth proxies cannot be used).",
+          "wake_timeout": "How long to wait for the Wi-Fi port after waking the speaker. A cold boot takes about 25 seconds."
         }
       }
     },
     "error": {
-      "cannot_connect": "Cannot connect to the speaker. Please check the IP address and port."
+      "cannot_connect": "Cannot connect to the speaker. Please check the IP address and port.",
+      "invalid_mac": "Enter a MAC address like B8:69:C2:15:29:FD.",
+      "bluetooth_unsupported": "This machine cannot use Bluetooth Classic (RFCOMM): no adapter, no permission, or no support. Leave the MAC empty to use Wi-Fi only.",
+      "bluetooth_unreachable": "The speaker did not answer over Bluetooth. Check it is paired with this machine and in range."
     },
     "abort": {
       "already_configured": "This speaker is already configured.",
@@ -42,6 +61,9 @@
     "button": {
       "power_off": {
         "name": "Power off"
+      },
+      "wake": {
+        "name": "Power on (wake)"
       }
     },
     "number": {
@@ -58,6 +80,38 @@
       },
       "mute": {
         "name": "Mute"
+      }
+    },
+    "binary_sensor": {
+      "bt_power": {
+        "name": "Power"
+      }
+    },
+    "select": {
+      "source": {
+        "name": "Source",
+        "state": {
+          "airplay": "AirPlay",
+          "bluetooth": "Bluetooth",
+          "aux": "AUX",
+          "optical": "Optical"
+        }
+      }
+    }
+  },
+  "services": {
+    "wake": {
+      "name": "Wake speaker",
+      "description": "Wake the speaker from standby over Bluetooth and wait for its Wi-Fi control port. Does nothing if it is already on.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Speaker",
+          "description": "Only needed when several speakers use Bluetooth."
+        },
+        "timeout": {
+          "name": "Timeout",
+          "description": "Seconds to wait for the Wi-Fi port (defaults to the configured wake wait)."
+        }
       }
     }
   }
