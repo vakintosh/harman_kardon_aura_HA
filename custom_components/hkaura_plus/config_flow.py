@@ -165,7 +165,12 @@ class HKAuraPlusConfigFlow(ConfigFlow, domain=DOMAIN):
                 data.pop(CONF_WAKE_TIMEOUT, None)  # Bluetooth removed
 
             if not errors:
-                if await self._test_connection(host, port):
+                # Standby has no Wi-Fi: only re-test it when host/port changed.
+                unchanged = (host, port) == (
+                    entry.data.get(CONF_HOST),
+                    entry.data.get(CONF_PORT),
+                )
+                if unchanged or await self._test_connection(host, port):
                     return self.async_update_reload_and_abort(
                         entry,
                         data=data,

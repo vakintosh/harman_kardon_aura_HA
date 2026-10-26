@@ -107,3 +107,39 @@ async def test_reconfigure_can_add_bluetooth(hass):
     assert result["reason"] == "reconfigure_successful"
     assert entry.data[CONF_BT_MAC] == MAC
     assert entry.data[CONF_WAKE_TIMEOUT] == 90
+
+
+async def test_reconfigure_adding_bluetooth_works_while_wifi_is_down(hass):
+    """Standby has no Wi-Fi; unchanged host/port must not be re-tested."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    entry = MockConfigEntry(domain=DOMAIN, data=WIFI, title="HK Aura Plus")
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+    with (
+        patch(f"{CF}.HKAuraPlusConfigFlow._test_connection", AsyncMock(return_value=False)) as wifi,
+        patch(f"{CF}.rfcomm_supported", return_value=True),
+        patch(f"{CF}.BluetoothSpeaker.power_state", AsyncMock(return_value=False)),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**WIFI, CONF_BT_MAC: MAC}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert entry.data[CONF_BT_MAC] == MAC
+    wifi.assert_not_awaited()
+
+
+async def test_reconfigure_changed_host_still_requires_wifi(hass):
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    entry = MockConfigEntry(domain=DOMAIN, data=WIFI, title="HK Aura Plus")
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+    with patch(
+        f"{CF}.HKAuraPlusConfigFlow._test_connection", AsyncMock(return_value=False)
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "10.0.0.9", CONF_PORT: 10025}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
