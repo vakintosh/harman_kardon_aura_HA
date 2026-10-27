@@ -119,19 +119,22 @@ class BluetoothSpeaker:
         Never sends the toggle unless power was read as off in this same
         connection; never sends it twice.
         """
+        result = WakeResult.ALREADY_ON
         async with self._lock:
             link = await self._link()
             try:
-                if await self._read_power(link):
-                    return WakeResult.ALREADY_ON
-                _LOGGER.debug("Speaker in standby, sending power toggle")
-                await link.send(proto.POWER_TOGGLE)
-                await self._confirm_on(link, confirm_attempts)
+                if not await self._read_power(link):
+                    _LOGGER.debug("Speaker in standby, sending power toggle")
+                    await link.send(proto.POWER_TOGGLE)
+                    await self._confirm_on(link, confirm_attempts)
+                    result = WakeResult.WOKE
             finally:
                 link.close()
+        # Also when already on: after a power cut the speaker can report "on"
+        # while its Wi-Fi is still booting, so callers still need the port.
         if port_ready is not None:
             await self._wait_port(port_ready, port_wait)
-        return WakeResult.WOKE
+        return result
 
     @staticmethod
     async def _read_power(link: Any) -> bool:

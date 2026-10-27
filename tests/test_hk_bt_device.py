@@ -155,3 +155,29 @@ async def test_default_request_timeout_is_short_enough_for_dropped_first_query()
     sig = inspect.signature(RfcommLink.request)
     assert sig.parameters["timeout"].default <= 1.5
     assert sig.parameters["retries"].default >= 3
+
+
+async def test_already_on_still_waits_for_wifi_port():
+    """Plug restored -> speaker reports on while Wi-Fi is still booting."""
+    link = FakeLink([ON])
+    calls = []
+
+    async def port_ready():
+        calls.append(1)
+        return len(calls) >= 3
+
+    result = await speaker_with(link).wake(port_ready=port_ready, port_wait=10)
+    assert result is dev.WakeResult.ALREADY_ON
+    assert len(calls) == 3
+    assert p.POWER_TOGGLE not in link.sent  # still never toggles an awake speaker
+
+
+async def test_already_on_port_never_ready_raises():
+    link = FakeLink([ON])
+
+    async def never():
+        return False
+
+    with pytest.raises(dev.WakeFailed):
+        await speaker_with(link).wake(port_ready=never, port_wait=2)
+    assert p.POWER_TOGGLE not in link.sent

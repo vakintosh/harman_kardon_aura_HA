@@ -19,7 +19,7 @@ A custom Home Assistant integration for controlling the Harman Kardon Aura Plus 
 
 ## Requirements
 
-- Home Assistant 2024.1.0 or newer
+- Home Assistant 2024.11.0 or newer
 - Harman Kardon Aura Plus speaker connected to your local network
 
 ## Installation
