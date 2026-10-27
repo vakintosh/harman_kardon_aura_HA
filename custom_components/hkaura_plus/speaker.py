@@ -9,6 +9,13 @@ from .const import ACTIONS, DEFAULT_PORT, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
+# The speaker's Wi-Fi can miss the first connection (seen once as EHOSTUNREACH
+# on hardware while the next attempt worked). Only the connect is retried; the
+# command is written once, after a connection exists, so it is never duplicated.
+CONNECT_RETRIES = 2
+CONNECT_BACKOFF = 1.0
+_sleep = asyncio.sleep
+
 XML_TEMPLATE = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <harman>
@@ -51,6 +58,22 @@ class HKDevice:
         writer.close()
         return True
 
+    async def _connect(self) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+        """Open a connection, retrying transient failures."""
+        for attempt in range(CONNECT_RETRIES + 1):
+            try:
+                return await asyncio.wait_for(
+                    asyncio.open_connection(self.host, self.port), timeout=TIMEOUT
+                )
+            except (OSError, TimeoutError) as err:
+                if attempt == CONNECT_RETRIES:
+                    raise
+                _LOGGER.debug(
+                    "Connect to %s:%s failed (%s), retrying", self.host, self.port, err
+                )
+                await _sleep(CONNECT_BACKOFF)
+        raise AssertionError("unreachable")  # pragma: no cover
+
     async def send_request(
         self, action: str, zone: str = "Main Zone", para: str | int | None = None
     ) -> None:
@@ -71,10 +94,7 @@ class HKDevice:
         )
 
         try:
-            reader, writer = await asyncio.wait_for(
-                asyncio.open_connection(self.host, self.port),
-                timeout=TIMEOUT,
-            )
+            reader, writer = await self._connect()
 
             writer.write(xml_data.encode("utf-8"))
             await writer.drain()
