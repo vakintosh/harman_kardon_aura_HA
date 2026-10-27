@@ -23,6 +23,9 @@ BUSY_BACKOFF: Final = 0.5
 _UNAVAILABLE_ERRNOS = {errno.ENODEV, errno.EAFNOSUPPORT, errno.EPERM, errno.EACCES,
                        errno.EPROTONOSUPPORT, errno.ENOPROTOOPT}
 
+# Seen on hardware: EBUSY right after a close, ECONNRESET while waking.
+_TRANSIENT_CONNECT_ERRNOS = {errno.EBUSY, errno.ECONNRESET}
+
 Connector = Callable[[str, int], Awaitable[socket.socket]]
 
 
@@ -148,7 +151,8 @@ async def open_link(
     """Connect to the speaker and return a link; raises typed errors.
 
     Reconnecting right after a close can fail with EBUSY while the previous
-    RFCOMM channel is torn down (seen on hardware), so that is retried.
+    RFCOMM channel is torn down, and a speaker that is waking can reset the
+    connection (ECONNRESET). Both were seen on hardware, so they are retried.
     """
     for attempt in range(busy_retries + 1):
         try:
@@ -159,7 +163,7 @@ async def open_link(
         except TimeoutError as err:
             raise RfcommUnreachable("connect timed out") from err
         except OSError as err:
-            if err.errno == errno.EBUSY and attempt < busy_retries:
+            if err.errno in _TRANSIENT_CONNECT_ERRNOS and attempt < busy_retries:
                 await sleep(BUSY_BACKOFF)
                 continue
             if err.errno in _UNAVAILABLE_ERRNOS:

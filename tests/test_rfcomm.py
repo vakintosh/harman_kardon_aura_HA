@@ -154,3 +154,23 @@ async def test_connect_gives_up_after_busy_retries():
         await rfcomm.open_link(
             "AA:BB:CC:DD:EE:FF", connector=always_busy, sleep=nosleep, busy_retries=2
         )
+
+
+async def test_connect_reset_by_speaker_is_retried():
+    """Live finding: a wake attempt got ECONNRESET (104) on connect, then worked."""
+    a, b = make_pair()
+    attempts = []
+
+    async def reset_once(mac, channel):
+        attempts.append(1)
+        if len(attempts) == 1:
+            raise OSError(errno.ECONNRESET, "Connection reset by peer")
+        return a
+
+    async def nosleep(_):
+        return None
+
+    link = await rfcomm.open_link("AA:BB:CC:DD:EE:FF", connector=reset_once, sleep=nosleep)
+    assert len(attempts) == 2
+    link.close()
+    b.close()

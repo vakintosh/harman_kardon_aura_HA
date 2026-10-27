@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
@@ -48,12 +49,24 @@ class HKAuraBtCoordinator(DataUpdateCoordinator[BtStatus]):
 
     async def async_wake(self, timeout: float | None = None) -> WakeResult:
         """Wake the speaker (guarded) and wait for the Wi-Fi control port."""
+        started = time.monotonic()
         try:
             result = await self.bluetooth.wake(
                 port_ready=self.device.async_port_open,
                 port_wait=self.wake_timeout if timeout is None else timeout,
             )
         except (RfcommError, ProtocolError, WakeFailed) as err:
+            _LOGGER.warning(
+                "Wake failed after %.1fs: %s: %s",
+                time.monotonic() - started,
+                type(err).__name__,
+                err,
+            )
             raise HomeAssistantError(f"Could not wake speaker: {err}") from err
+        _LOGGER.info(
+            "Wake result: %s (Wi-Fi port open after %.1fs)",
+            result.name,
+            time.monotonic() - started,
+        )
         await self.async_request_refresh()
         return result

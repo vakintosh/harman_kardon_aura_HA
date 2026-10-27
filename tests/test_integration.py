@@ -132,3 +132,22 @@ async def test_select_source_and_standby_guard(hass):
             await hass.services.async_call(
                 "select", "select_option", {"entity_id": eid, "option": "aux"}, blocking=True
             )
+
+
+async def test_wake_logs_outcome(hass, caplog):
+    import logging
+    await setup_entry(hass, BT, STANDBY)
+    with (
+        caplog.at_level(logging.INFO, logger="custom_components.hkaura_plus"),
+        patch.object(BluetoothSpeaker, "wake", AsyncMock(return_value=WakeResult.WOKE)),
+        patch.object(BluetoothSpeaker, "status", AsyncMock(return_value=ON)),
+    ):
+        await hass.services.async_call(DOMAIN, "wake", {}, blocking=True)
+    assert any("woke" in r.message.lower() for r in caplog.records)
+
+    caplog.clear()
+    with caplog.at_level(logging.WARNING, logger="custom_components.hkaura_plus"):
+        with patch.object(BluetoothSpeaker, "wake", AsyncMock(side_effect=WakeFailed("no"))):
+            with pytest.raises(HomeAssistantError):
+                await hass.services.async_call(DOMAIN, "wake", {}, blocking=True)
+    assert any("wake" in r.message.lower() and r.levelno >= logging.WARNING for r in caplog.records)
