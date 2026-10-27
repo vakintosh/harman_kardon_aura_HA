@@ -12,7 +12,11 @@ CONF_BT_MAC: Final = "bluetooth_mac"
 CONF_WAKE_TIMEOUT: Final = "wake_timeout"
 
 DEFAULT_WAKE_TIMEOUT: Final = 120  # seconds to wait for the control port after wake
-BT_POLL_INTERVAL: Final = 60  # seconds between Bluetooth state reads
+# Seconds between Bluetooth state reads. The speaker pushes no change
+# notifications, so the UI can only be as fresh as the poll: read often while it
+# is on (cheap, ~0.3 s), rarely in standby (each read costs a few seconds).
+BT_POLL_AWAKE: Final = 15
+BT_POLL_STANDBY: Final = 60
 SERVICE_WAKE: Final = "wake"
 
 DEFAULT_PORT: Final = 10025

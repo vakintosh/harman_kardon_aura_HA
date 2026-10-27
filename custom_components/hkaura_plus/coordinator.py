@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import BT_POLL_INTERVAL, DOMAIN
+from .const import BT_POLL_AWAKE, BT_POLL_STANDBY, DOMAIN
 from .hk_bt_device import BluetoothSpeaker, BtStatus, WakeFailed, WakeResult
 from .hk_bt_protocol import ProtocolError
 from .rfcomm import RfcommError
@@ -35,7 +35,7 @@ class HKAuraBtCoordinator(DataUpdateCoordinator[BtStatus]):
             _LOGGER,
             config_entry=entry,
             name=f"{DOMAIN} bluetooth",
-            update_interval=timedelta(seconds=BT_POLL_INTERVAL),
+            update_interval=timedelta(seconds=BT_POLL_STANDBY),
         )
         self.bluetooth = bluetooth
         self.device = device
@@ -43,9 +43,14 @@ class HKAuraBtCoordinator(DataUpdateCoordinator[BtStatus]):
 
     async def _async_update_data(self) -> BtStatus:
         try:
-            return await self.bluetooth.status()
+            status = await self.bluetooth.status()
         except (RfcommError, ProtocolError) as err:
+            self.update_interval = timedelta(seconds=BT_POLL_STANDBY)
             raise UpdateFailed(f"Bluetooth status failed: {err}") from err
+        self.update_interval = timedelta(
+            seconds=BT_POLL_AWAKE if status.power else BT_POLL_STANDBY
+        )
+        return status
 
     async def async_wake(self, timeout: float | None = None) -> WakeResult:
         """Wake the speaker (guarded) and wait for the Wi-Fi control port."""

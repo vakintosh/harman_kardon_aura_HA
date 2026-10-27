@@ -8,8 +8,9 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -99,6 +100,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: HKAuraConfigEntry) -> bo
         # Never block or fail setup because of Bluetooth: Wi-Fi entities must
         # keep working. Failures show up as unavailable Bluetooth entities.
         await data.coordinator.async_refresh()
+        # Starting playback is what flips the speaker's input to AirPlay, so
+        # refresh right away when the linked media player changes state.
+        if data.media_player_entity:
+            coordinator = data.coordinator
+
+            async def _refresh(_event: Event) -> None:
+                await coordinator.async_request_refresh()
+
+            entry.async_on_unload(
+                async_track_state_change_event(
+                    hass, [data.media_player_entity], _refresh
+                )
+            )
     entry.runtime_data = data
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -133,7 +133,7 @@ play command is safe.
 **Good to know**
 
 - The first connection after a long idle can take several seconds, and 25-60 s before the Wi-Fi port is back.
-- State is polled over Bluetooth every 60 s using short-lived connections.
+- State is polled over Bluetooth with short-lived connections: every 15 s while the speaker is on, every 60 s in standby (the speaker pushes no change notifications). If you linked a media player, the state is also refreshed immediately when that player changes state, e.g. when AirPlay playback starts.
 - The input can only be **read**. The app's source-select command does not behave as a selector on the Aura Plus (it steps through inputs), so there is no source selector; use the speaker's own button or the HK Remote app.
 - Only one speaker/firmware (Aura Plus, FW 2.0.1) has been verified.
 - The legacy A2DP scripts in [`scripts/`](scripts/) still work but are no longer needed.

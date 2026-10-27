@@ -146,3 +146,52 @@ async def test_wake_logs_outcome(hass, caplog):
             with pytest.raises(HomeAssistantError):
                 await hass.services.async_call(DOMAIN, "wake", {}, blocking=True)
     assert any("wake" in r.message.lower() and r.levelno >= logging.WARNING for r in caplog.records)
+
+
+async def test_poll_interval_is_short_when_on_and_long_in_standby(hass):
+    from datetime import timedelta
+    from custom_components.hkaura_plus.const import BT_POLL_AWAKE, BT_POLL_STANDBY
+
+    entry = await setup_entry(hass, BT, ON)
+    coord = entry.runtime_data.coordinator
+    assert coord.update_interval == timedelta(seconds=BT_POLL_AWAKE)
+    assert BT_POLL_AWAKE <= 15 < BT_POLL_STANDBY
+
+    with patch.object(BluetoothSpeaker, "status", AsyncMock(return_value=STANDBY)):
+        await coord.async_refresh()
+    assert coord.update_interval == timedelta(seconds=BT_POLL_STANDBY)
+
+    with patch.object(BluetoothSpeaker, "status", AsyncMock(return_value=ON)):
+        await coord.async_refresh()
+    assert coord.update_interval == timedelta(seconds=BT_POLL_AWAKE)
+
+
+async def test_unreachable_speaker_falls_back_to_slow_polling(hass):
+    from datetime import timedelta
+    from custom_components.hkaura_plus.const import BT_POLL_STANDBY
+
+    entry = await setup_entry(hass, BT, ON)
+    coord = entry.runtime_data.coordinator
+    with patch.object(BluetoothSpeaker, "status", AsyncMock(side_effect=RfcommUnreachable("x"))):
+        await coord.async_refresh()
+    assert coord.update_interval == timedelta(seconds=BT_POLL_STANDBY)
+
+
+async def test_media_player_state_change_triggers_immediate_refresh(hass):
+    data = {**BT, "media_player_entity": "media_player.hk_aura_wf"}
+    status = AsyncMock(return_value=ON)
+    entry = MockConfigEntry(domain=DOMAIN, data=data, title="HK Aura Plus")
+    entry.add_to_hass(hass)
+    with patch.object(BluetoothSpeaker, "status", status):
+        hass.states.async_set("media_player.hk_aura_wf", "idle")
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        before = status.await_count
+        hass.states.async_set("media_player.hk_aura_wf", "playing")
+        await hass.async_block_till_done()
+    assert status.await_count > before
+
+
+async def test_no_media_player_configured_still_sets_up(hass):
+    entry = await setup_entry(hass, {**BT, "media_player_entity": ""}, ON)
+    assert entry.state is ConfigEntryState.LOADED
