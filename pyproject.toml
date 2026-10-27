@@ -1,6 +1,6 @@
 [project]
 name = "harman-kardon-aura-ha"
-version = "0.3.0"
+version = "0.5.0"
 description = "Home Assistant custom integration for Harman Kardon Aura Plus speakers"
 requires-python = ">=3.13"
 dependencies = []
@@ -12,3 +12,7 @@ dev = [
     "pytest",
     "pytest-homeassistant-custom-component",
 ]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = ["live: needs a real speaker (HK_LIVE_MAC); skipped otherwise"]

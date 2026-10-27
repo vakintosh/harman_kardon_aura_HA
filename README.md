@@ -12,13 +12,14 @@ A custom Home Assistant integration for controlling the Harman Kardon Aura Plus 
 - **Mute/Unmute** — Toggle switch
 - **Power Off** — Turn off speaker via button
 - **Volume Sync** — Optionally sync with a media_player entity
+- **Bluetooth wake & state (optional, experimental)** — wake the speaker from standby, read its power state and current input over Bluetooth Classic (RFCOMM), with no audio stream needed
 - Seamless integration with Home Assistant UI and automations
 
-> **⚠️ Note**: The power-off button fully shuts down the speaker. To turn it back on, you must use the physical power button, the official HK Remote app, or a [Bluetooth wake script](#bluetooth-wake-from-standby).
+> **⚠️ Note**: The power-off button fully shuts down the speaker. To turn it back on, use the physical power button, the official HK Remote app, or the [Bluetooth wake](#bluetooth-wake-and-state-optional) feature below.
 
 ## Requirements
 
-- Home Assistant 2024.1.0 or newer
+- Home Assistant 2024.11.0 or newer
 - Harman Kardon Aura Plus speaker connected to your local network
 
 ## Installation
@@ -53,6 +54,8 @@ This integration is configured via the UI:
 | Host | Yes | IP address or hostname of your HK Aura Plus speaker |
 | Port | Yes | Port number for communication (default: 10025) |
 | Media Player Entity | No | Entity ID of a media player to sync volume with |
+| Bluetooth MAC | No | Speaker's Bluetooth address, e.g. `B8:69:C2:15:29:FD`. Enables the Bluetooth features below |
+| Wake wait | No | Seconds to wait for the Wi-Fi port after a wake (default 120; boot to a usable Wi-Fi port took 25-60 s in testing) |
 
 ### Volume Sync
 
@@ -69,6 +72,9 @@ After configuration and restart, the following entities appear in Home Assistant
 | `switch.hk_aura_eq_mode` | EQ mode toggle |
 | `switch.hk_aura_mute` | Mute toggle |
 | `button.hk_aura_power_off` | Power off button |
+| `binary_sensor.hk_aura_power` | On/off, read over Bluetooth (works in standby) — *Bluetooth only* |
+| `button.hk_aura_power_on_wake` | Wake from standby — *Bluetooth only* |
+| `sensor.hk_aura_source` | Current input (AirPlay, Bluetooth, AUX, Optical…), read-only — *Bluetooth only* |
 
 ## Dashboard
 
@@ -94,23 +100,52 @@ cards:
 
 </details>
 
-## Bluetooth Wake from Standby
+## Bluetooth wake and state (optional)
 
-The speaker's WiFi control port (TCP 10025) only opens after it receives a Bluetooth A2DP audio stream. Scripts are provided to automate this:
+The speaker keeps a Bluetooth Classic serial (RFCOMM, SPP) control channel open
+even in standby, while its Wi-Fi is off. The integration uses it to read power
+state and to send the wake command, so no audio stream is needed.
 
-| Script | Platform | Description |
-|--------|----------|-------------|
-| [`scripts/wake_speaker_mac.sh`](scripts/wake_speaker_mac.sh) | macOS | Uses blueutil + mpv |
-| [`scripts/wake_speaker_linux.sh`](scripts/wake_speaker_linux.sh) | Linux / Raspberry Pi | Uses bluetoothctl + PipeWire + mpv |
-| [`scripts/setup_wake_speaker.sh`](scripts/setup_wake_speaker.sh) | Linux | Interactive setup wizard |
+**Requirements**
 
+- The machine running Home Assistant needs its **own Bluetooth adapter** with BlueZ (Linux). ESPHome/BLE
+  proxies **cannot** be used: they relay Bluetooth Low Energy only, and this channel is Classic.
+- The speaker must be **paired** with that machine (`bluetoothctl pair <MAC>`; connecting once also pairs it on a Raspberry Pi).
+- Home Assistant must be allowed to open Bluetooth sockets. A Home Assistant container on a Raspberry Pi
+  with `hostNetwork` and the `NET_ADMIN` capability worked. HA OS, Supervised and VM installs are **untested**.
+
+Enter the speaker's Bluetooth MAC when adding or reconfiguring the integration. If this machine cannot use
+RFCOMM, the form says so and you can continue with Wi-Fi only; the Wi-Fi entities never depend on Bluetooth.
+
+**Wake service**
+
+```yaml
+action: hkaura_plus.wake
+data:
+  timeout: 60   # optional, seconds to wait for the Wi-Fi port
+```
+
+The power command the speaker understands is a toggle (the same bytes switch it on and off). The integration therefore
+reads the power state first and sends it **at most once, and only when the speaker reads as standby**. If the speaker is
+already on, nothing is sent. The call returns once the Wi-Fi control port is open, so a following AirPlay/Music Assistant
+play command is safe.
+
+**Good to know**
+
+- The first connection after a long idle can take several seconds, and 25-60 s before the Wi-Fi port is back.
+- State is polled over Bluetooth with short-lived connections: every 15 s while the speaker is on, every 60 s in standby (the speaker pushes no change notifications). If you linked a media player, the state is also refreshed immediately when that player changes state, e.g. when AirPlay playback starts.
+- The input can only be **read**. The app's source-select command does not behave as a selector on the Aura Plus (it steps through inputs), so there is no source selector; use the speaker's own button or the HK Remote app.
+- Only one speaker/firmware (Aura Plus, FW 2.0.1) has been verified.
+- The legacy A2DP scripts in [`scripts/`](scripts/) still work but are no longer needed.
+- Protocol details were derived from the official app; see `scripts/hk_rfcomm_probe.py` for a read-only probe you can run to check your speaker.
 
 ## Project Structure
 
 ```
 ├── custom_components/
 │   └── hkaura_plus/      # Home Assistant custom component
-├── scripts/              # Wake scripts & test utilities
+├── scripts/              # Legacy wake scripts, read-only RFCOMM probe
+├── tests/                # Unit tests; tests/live needs a real speaker
 └── img/                  # Screenshots
 ```
 

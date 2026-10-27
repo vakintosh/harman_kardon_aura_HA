@@ -1,0 +1,15 @@
+wake:
+  fields:
+    config_entry_id:
+      required: false
+      selector:
+        config_entry:
+          integration: hkaura_plus
+    timeout:
+      required: false
+      example: 60
+      selector:
+        number:
+          min: 1
+          max: 600
+          unit_of_measurement: s
