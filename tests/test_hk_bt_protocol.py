@@ -16,9 +16,9 @@ def test_wake_toggle_bytes_match_apk():
     assert p.POWER_TOGGLE == b"\x0b\x03\x00\x20"
 
 
-def test_set_source_frame():
-    assert p.set_source(p.Source.BLUETOOTH) == b"\x0e\x03\x02"
-    assert p.set_source(p.Source.AIRPLAY) == b"\x0e\x03\x01"
+def test_there_is_no_set_source_builder():
+    """Hardware showed 0E 03 <n> steps through inputs instead of selecting <n>."""
+    assert not hasattr(p, "set_source")
 
 
 @pytest.mark.parametrize(

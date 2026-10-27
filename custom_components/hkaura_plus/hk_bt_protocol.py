@@ -57,11 +57,6 @@ class VolumeMute:
     volume: int
 
 
-def set_source(source: Source) -> bytes:
-    """Build a set-source frame."""
-    return bytes([TYPE_SOURCE, 0x03, int(source)])
-
-
 def is_reply(frame: bytes, frame_type: int) -> bool:
     """Return True if ``frame`` is a reply of ``frame_type``."""
     return len(frame) >= 2 and frame[0] == frame_type and frame[1] == REPLY_OP

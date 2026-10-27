@@ -98,15 +98,6 @@ class BluetoothSpeaker:
             finally:
                 link.close()
 
-    async def set_source(self, source: proto.Source) -> None:
-        """Select an input source (speaker must be on)."""
-        async with self._lock:
-            link = await self._link()
-            try:
-                await link.send(proto.set_source(source))
-            finally:
-                link.close()
-
     async def wake(
         self,
         *,

@@ -56,7 +56,7 @@ async def test_wifi_only_entry_has_no_bluetooth_entities(hass):
     assert entry.runtime_data.coordinator is None
     reg = er.async_get(hass)
     domains = {e.domain for e in reg.entities.values() if e.platform == DOMAIN}
-    assert "select" not in domains and "binary_sensor" not in domains
+    assert "sensor" not in domains and "binary_sensor" not in domains
     assert not any(e.unique_id.endswith("_wake") for e in reg.entities.values())
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(DOMAIN, "wake", {}, blocking=True)
@@ -65,13 +65,13 @@ async def test_wifi_only_entry_has_no_bluetooth_entities(hass):
 async def test_awake_state(hass):
     await setup_entry(hass, BT, ON)
     assert hass.states.get(entity_id(hass, "binary_sensor", "bt_power")).state == STATE_ON
-    assert hass.states.get(entity_id(hass, "select", "source")).state == "airplay"
+    assert hass.states.get(entity_id(hass, "sensor", "source")).state == "airplay"
 
 
 async def test_standby_state(hass):
     await setup_entry(hass, BT, STANDBY)
     assert hass.states.get(entity_id(hass, "binary_sensor", "bt_power")).state == STATE_OFF
-    assert hass.states.get(entity_id(hass, "select", "source")).state == STATE_UNKNOWN
+    assert hass.states.get(entity_id(hass, "sensor", "source")).state == STATE_UNKNOWN
 
 
 async def test_bluetooth_failure_does_not_break_setup(hass):
@@ -110,28 +110,23 @@ async def test_wake_button_and_failure_mapping(hass):
             await hass.services.async_call("button", "press", {"entity_id": eid}, blocking=True)
 
 
-async def test_select_source_and_standby_guard(hass):
+async def test_source_is_read_only_sensor(hass):
     await setup_entry(hass, BT, ON)
-    eid = entity_id(hass, "select", "source")
-    setter = AsyncMock()
-    with (
-        patch.object(BluetoothSpeaker, "set_source", setter),
-        patch.object(BluetoothSpeaker, "status", AsyncMock(return_value=ON)),
-    ):
-        await hass.services.async_call(
-            "select", "select_option", {"entity_id": eid, "option": "aux"}, blocking=True
-        )
-    setter.assert_awaited_once_with(Source.AUX)
+    reg = er.async_get(hass)
+    assert not any(e.domain == "select" and e.platform == DOMAIN for e in reg.entities.values())
+    assert not hasattr(BluetoothSpeaker, "set_source")
 
-    # standby: refuse instead of sending a command to a sleeping speaker
-    with patch.object(BluetoothSpeaker, "status", AsyncMock(return_value=STANDBY)):
-        coord = hass.config_entries.async_entries(DOMAIN)[0].runtime_data.coordinator
-        await coord.async_refresh()
-    with patch.object(BluetoothSpeaker, "set_source", setter):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                "select", "select_option", {"entity_id": eid, "option": "aux"}, blocking=True
-            )
+
+async def test_source_sensor_tracks_status(hass):
+    entry = await setup_entry(hass, BT, ON)
+    eid = entity_id(hass, "sensor", "source")
+    with patch.object(
+        BluetoothSpeaker, "status",
+        AsyncMock(return_value=BtStatus(power=True, source=Source.OPTICAL)),
+    ):
+        await entry.runtime_data.coordinator.async_refresh()
+        await hass.async_block_till_done()
+    assert hass.states.get(eid).state == "optical"
 
 
 async def test_wake_logs_outcome(hass, caplog):

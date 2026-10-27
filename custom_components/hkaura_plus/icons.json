@@ -29,7 +29,7 @@
         "default": "mdi:speaker"
       }
     },
-    "select": {
+    "sensor": {
       "source": {
         "default": "mdi:import"
       }

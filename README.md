@@ -12,7 +12,7 @@ A custom Home Assistant integration for controlling the Harman Kardon Aura Plus 
 - **Mute/Unmute** — Toggle switch
 - **Power Off** — Turn off speaker via button
 - **Volume Sync** — Optionally sync with a media_player entity
-- **Bluetooth wake & state (optional, experimental)** — wake the speaker from standby, read its power state and pick its input over Bluetooth Classic (RFCOMM), with no audio stream needed
+- **Bluetooth wake & state (optional, experimental)** — wake the speaker from standby, read its power state and current input over Bluetooth Classic (RFCOMM), with no audio stream needed
 - Seamless integration with Home Assistant UI and automations
 
 > **⚠️ Note**: The power-off button fully shuts down the speaker. To turn it back on, use the physical power button, the official HK Remote app, or the [Bluetooth wake](#bluetooth-wake-and-state-optional) feature below.
@@ -74,7 +74,7 @@ After configuration and restart, the following entities appear in Home Assistant
 | `button.hk_aura_power_off` | Power off button |
 | `binary_sensor.hk_aura_power` | On/off, read over Bluetooth (works in standby) — *Bluetooth only* |
 | `button.hk_aura_power_on_wake` | Wake from standby — *Bluetooth only* |
-| `select.hk_aura_source` | AirPlay / Bluetooth / AUX / Optical — *Bluetooth only* |
+| `sensor.hk_aura_source` | Current input (AirPlay, Bluetooth, AUX, Optical…), read-only — *Bluetooth only* |
 
 ## Dashboard
 
@@ -134,6 +134,7 @@ play command is safe.
 
 - The first connection after a long idle can take several seconds, and 25-60 s before the Wi-Fi port is back.
 - State is polled over Bluetooth every 60 s using short-lived connections.
+- The input can only be **read**. The app's source-select command does not behave as a selector on the Aura Plus (it steps through inputs), so there is no source selector; use the speaker's own button or the HK Remote app.
 - Only one speaker/firmware (Aura Plus, FW 2.0.1) has been verified.
 - The legacy A2DP scripts in [`scripts/`](scripts/) still work but are no longer needed.
 - Protocol details were derived from the official app; see `scripts/hk_rfcomm_probe.py` for a read-only probe you can run to check your speaker.

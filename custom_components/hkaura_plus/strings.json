@@ -87,14 +87,18 @@
         "name": "Power"
       }
     },
-    "select": {
+    "sensor": {
       "source": {
         "name": "Source",
         "state": {
+          "dock": "Dock",
           "airplay": "AirPlay",
           "bluetooth": "Bluetooth",
           "aux": "AUX",
-          "optical": "Optical"
+          "optical": "Optical",
+          "phono": "Phono",
+          "dlna": "DLNA",
+          "tv": "TV"
         }
       }
     }
