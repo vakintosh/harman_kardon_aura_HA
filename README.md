@@ -55,7 +55,7 @@ This integration is configured via the UI:
 | Port | Yes | Port number for communication (default: 10025) |
 | Media Player Entity | No | Entity ID of a media player to sync volume with |
 | Bluetooth MAC | No | Speaker's Bluetooth address, e.g. `B8:69:C2:15:29:FD`. Enables the Bluetooth features below |
-| Wake wait | No | Seconds to wait for the Wi-Fi port after a wake (default 60; a cold boot takes about 25 s) |
+| Wake wait | No | Seconds to wait for the Wi-Fi port after a wake (default 120; boot to a usable Wi-Fi port took 25-60 s in testing) |
 
 ### Volume Sync
 
@@ -132,7 +132,7 @@ play command is safe.
 
 **Good to know**
 
-- The first connection after a long idle can take several seconds, and a cold boot about 25 s before Wi-Fi is back.
+- The first connection after a long idle can take several seconds, and 25-60 s before the Wi-Fi port is back.
 - State is polled over Bluetooth every 60 s using short-lived connections.
 - Only one speaker/firmware (Aura Plus, FW 2.0.1) has been verified.
 - The legacy A2DP scripts in [`scripts/`](scripts/) still work but are no longer needed.

@@ -30,7 +30,7 @@
           "port": "The TCP port for communication (default: 10025).",
           "media_player_entity": "Entity ID of the Music Assistant media player for this speaker (e.g. media_player.hk_aura_wf).",
           "bluetooth_mac": "Bluetooth address of the speaker, e.g. B8:69:C2:15:29:FD. Leave empty to use Wi-Fi only. The speaker must be paired with the machine running Home Assistant, and that machine needs its own Bluetooth adapter (Bluetooth proxies cannot be used).",
-          "wake_timeout": "How long to wait for the Wi-Fi port after waking the speaker. A cold boot takes about 25 seconds."
+          "wake_timeout": "How long to wait for the Wi-Fi port after waking the speaker. Boot takes 25-60 seconds; the default is 120."
         }
       },
       "bluetooth": {
@@ -42,7 +42,7 @@
         },
         "data_description": {
           "bluetooth_mac": "Bluetooth address of the speaker, e.g. B8:69:C2:15:29:FD. Leave empty to use Wi-Fi only. The speaker must be paired with the machine running Home Assistant, and that machine needs its own Bluetooth adapter (Bluetooth proxies cannot be used).",
-          "wake_timeout": "How long to wait for the Wi-Fi port after waking the speaker. A cold boot takes about 25 seconds."
+          "wake_timeout": "How long to wait for the Wi-Fi port after waking the speaker. Boot takes 25-60 seconds; the default is 120."
         }
       }
     },

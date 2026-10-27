@@ -113,8 +113,9 @@ async def test_wake_port_never_ready_raises():
         await speaker_with(link).wake(port_ready=never, port_wait=2)
 
 
-def test_default_port_wait_is_60_seconds():
-    assert dev.DEFAULT_PORT_WAIT == 60
+def test_default_port_wait_is_120_seconds():
+    """Measured boot-to-control-port: 25-32 s typical, 58.4 s worst seen."""
+    assert dev.DEFAULT_PORT_WAIT == 120
     import inspect
     sig = inspect.signature(dev.BluetoothSpeaker.wake)
     assert sig.parameters["port_wait"].default == dev.DEFAULT_PORT_WAIT
@@ -145,3 +146,12 @@ async def test_status_standby_skips_source():
     st = await speaker_with(link).status()
     assert st == dev.BtStatus(power=False, source=None)
     assert p.QUERY_SOURCE not in link.sent
+
+
+async def test_default_request_timeout_is_short_enough_for_dropped_first_query():
+    """In standby the first query is always dropped; a 3 s wait made each read ~3.8 s."""
+    import inspect
+    from custom_components.hkaura_plus.rfcomm import RfcommLink
+    sig = inspect.signature(RfcommLink.request)
+    assert sig.parameters["timeout"].default <= 1.5
+    assert sig.parameters["retries"].default >= 3

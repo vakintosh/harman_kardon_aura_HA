@@ -57,7 +57,7 @@ async def test_bluetooth_mac_is_probed_and_stored(hass):
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BT_MAC] == MAC  # normalised
-    assert result["data"][CONF_WAKE_TIMEOUT] == 60
+    assert result["data"][CONF_WAKE_TIMEOUT] == 120
 
 
 @pytest.mark.parametrize(

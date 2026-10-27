@@ -84,7 +84,7 @@ class RfcommLink:
             raise RfcommUnreachable(str(err)) from err
 
     async def request(
-        self, frame: bytes, reply_type: int, *, timeout: float = 3.0, retries: int = 2
+        self, frame: bytes, reply_type: int, *, timeout: float = 1.5, retries: int = 3
     ) -> bytes:
         """Send ``frame`` and return the reply of ``reply_type``.
 

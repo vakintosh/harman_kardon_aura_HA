@@ -11,7 +11,7 @@ CONF_MEDIA_PLAYER_ENTITY: Final = "media_player_entity"
 CONF_BT_MAC: Final = "bluetooth_mac"
 CONF_WAKE_TIMEOUT: Final = "wake_timeout"
 
-DEFAULT_WAKE_TIMEOUT: Final = 60  # seconds to wait for the control port after wake
+DEFAULT_WAKE_TIMEOUT: Final = 120  # seconds to wait for the control port after wake
 BT_POLL_INTERVAL: Final = 60  # seconds between Bluetooth state reads
 SERVICE_WAKE: Final = "wake"
 

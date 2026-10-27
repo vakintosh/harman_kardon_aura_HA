@@ -19,9 +19,9 @@ from .rfcomm import RFCOMM_CHANNEL, RfcommLink, open_link
 _LOGGER = logging.getLogger(__name__)
 
 CONFIRM_INTERVAL: Final = 1.0
-# Seconds to wait for the Wi-Fi control port after a wake. A cold boot was
-# measured at 25 s on hardware, so 60 s leaves headroom.
-DEFAULT_PORT_WAIT: Final = 60
+# Seconds to wait for the Wi-Fi control port after a wake. Measured on
+# hardware: 25-32 s typically, 58.4 s in the worst run, so 120 s.
+DEFAULT_PORT_WAIT: Final = 120
 
 Opener = Callable[..., Awaitable[RfcommLink]]
 Sleeper = Callable[[float], Awaitable[None]]
